@@ -102,8 +102,16 @@ struct CelestiaLightApp: App {
     @Environment(\.dismiss) var dismiss
     
     func load_node() {
+        let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let doc_dir = urls[0]
+        print(doc_dir)
+
         Task {
-            let msg = try! JSONEncoder().encode(BridgeMessage<Int>(c: .CMD_INIT_NODE, p: 0))
+            let msg = try! JSONEncoder().encode(
+              BridgeMessage<BridgeCmdLoadNode>(
+                c: .CMD_INIT_NODE, p: BridgeCmdLoadNode(store_path: "\(doc_dir)")
+              )
+            )
             await app_delegate.driver.comm_channel.send(msg)
         }
     }
@@ -167,6 +175,14 @@ public struct BridgeMessage<P: Codable> : Codable {
     }
     
 }
+
+struct BridgeCmdLoadNode : Codable {
+    let StorePath: string
+    init(store_path: String) {
+        self.StorePath = store_path
+    }
+}
+
 
 public struct AnyDecodable : Codable {
     
