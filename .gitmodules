@@ -1,3 +1,6 @@
 [submodule "celestia-node"]
 	path = celestia-node
-	url = https://github.com/celestiaorg/celestia-node.git
+	url = git@github.com:fxfactorial/celestia-node.git
+[submodule "gosigar"]
+	path = gosigar
+	url = git@github.com:fxfactorial/gosigar.git
