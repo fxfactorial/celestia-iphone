@@ -176,12 +176,12 @@ public struct BridgeMessage<P: Codable> : Codable {
     
 }
 
-struct BridgeCmdLoadNode : Codable {
-    let StorePath: string
-    init(store_path: String) {
-        self.StorePath = store_path
-    }
-}
+//struct BridgeCmdLoadNode : Codable {
+//    let StorePath: string
+//    init(store_path: String) {
+//        self.StorePath = store_path
+//    }
+//}
 
 
 public struct AnyDecodable : Codable {
