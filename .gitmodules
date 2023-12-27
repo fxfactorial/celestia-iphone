@@ -1,9 +1,12 @@
 [submodule "celestia-node"]
 	path = celestia-node
 	url = git@github.com:fxfactorial/celestia-node.git
+	branch = compile-to-swift
 [submodule "gosigar"]
 	path = gosigar
 	url = git@github.com:fxfactorial/gosigar.git
+	branch = master
 [submodule "keyring"]
 	path = keyring
 	url = git@github.com:fxfactorial/keyring.git
+	branch = master
