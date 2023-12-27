@@ -4,10 +4,15 @@
 $ git clone --recurse-submodules  git@github.com:fxfactorial/celestia-iphone.git
 ```
 
-Commit of gosigar should be `fab926c0fd9f73434fc6f4fd1c3f647c1d202a8f`
+# Build
 
-Commit of celestia-node should be `0f7680d5e625629a4d203e825084a8653ee5166b`
+first build the `xcframework` in the root of the directory
 
-# Fix build issue
+```
+$ make ios
+```
 
-Then go to `celestia-node` and make `make ios` work, aka fix the 99designs/keyring issue
+# iOS app
+
+then you can open the xcode project and build it on simulator, if you have apple dev account then
+can run on device
