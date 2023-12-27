@@ -16,13 +16,20 @@ extension Bool {
     }
 }
 
+struct DasRecord : Hashable {
+    let evidence: String
+    let time : String
+    let last_commit: String
+}
+
 @Observable final class CelestiaRunControls {
     static let shared = CelestiaRunControls()
     var run_error = ""
     var show_error_sheet = false
     var peer_count = 0
     var is_running = false
-    var headers : [String] = []
+    var das_record : [String: DasRecord] = [:]
+    var subbed_topics : [String:Int] = [:]
 }
 
 @_cdecl("send_error_back")
@@ -57,16 +64,35 @@ func do_work(rpy: String) {
         print("stop node")
     case .RUN_RECEIVE_HEADER:
         let reply = decoded.Payload!.value as! Dictionary<String, String>
+        _ = reply
+//        DispatchQueue.main.async {
+//            CelestiaRunControls.shared.headers.append(reply["header"]!)
+//        }
+    case .RUN_SUBBED_TOPICS:
+        let reply = decoded.Payload!.value as! [String: Int]
         DispatchQueue.main.async {
-            CelestiaRunControls.shared.headers.append(reply["header"]!)
+            CelestiaRunControls.shared.subbed_topics = reply
         }
-
     case .RUN_NEW_SAMPLE:
         let reply = decoded.Payload!.value as! Dictionary<String, AnyDecodable>
-        print(reply)
-        DispatchQueue.main.async {
-            CelestiaRunControls.shared.headers.append(reply["header"]!)
+        if let hdr = reply["header"]?.value as? Dictionary<String, AnyDecodable> {
+            let commit = hdr["commit"]?.value as? String
+            let unwrapped_hdr = hdr["header"]?.value as! Dictionary<String, AnyDecodable>
+//            print("hdr itself", hdr.keys, unwrapped_hdr.keys, commit)
+            let evidence_hsh = unwrapped_hdr["evidence_hash"]?.value as! String
+            let time = unwrapped_hdr["time"]?.value as! String
+            let last_commit_hsh = unwrapped_hdr["last_commit_hash"]?.value as! String
+            let height = unwrapped_hdr["height"]?.value as! String
+            DispatchQueue.main.async {
+                CelestiaRunControls.shared.das_record[height] = DasRecord(
+                    evidence: evidence_hsh, time: time, last_commit: last_commit_hsh
+                )
+            }
+        } else {
+            
         }
+//        print(reply)
+
     }
 }
 
@@ -81,8 +107,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     
     func start_handling_bridge() {
         Task.detached {
-            Celestia.MakeChannelAndListenThread(true.to_go_bool())
-            Celestia.MakeChannelAndReplyThread(true.to_go_bool())
+            Celestia.MakeChannelAndListenThread(false.to_go_bool())
+            Celestia.MakeChannelAndReplyThread(false.to_go_bool())
             
             for await msg in self.driver.comm_channel {
                 String(data: msg, encoding: .utf8)!.withCString {
@@ -141,27 +167,52 @@ struct CelestiaLightApp: App {
     
     var body: some Scene {
         WindowGroup {
-            VStack {
-                Spacer().frame(height: 50)
+            NavigationStack {
                 Form {
                     Section("Controls") {
-                        Button("Load Celestia Node") {
-                            print("load node")
-                            load_node()
-                        }
+                        //                        Button("Load Celestia Node") {
+                        //                            print("load node")
+                        //                            load_node()
+                        //                        }
                         Button("Start Celestia Node") {
                             print("start node")
+                            run_controls.is_running = true
                             start_node()
                         }
                         Button("Stop Celestia Node") {
                             print("stop celestia")
+                            run_controls.is_running = false
                             stop_node()
                         }
                     }
-                }.frame(maxHeight: 250)
-                Section("") {
-                    List(run_controls.headers, id: \.self) {header in
-                        Text(header)
+                    Section("Subscribed Topics") {
+                        List(Array(run_controls.subbed_topics.keys), id: \.self) { topic in
+                            HStack {
+                                Text(topic).font(.system(size: 12))
+                                Spacer()
+                                Text("Peer Count \(run_controls.subbed_topics[topic]!)")
+                                    .font(.system(size: 12))
+                            }
+                        }
+                    }
+                    Section( run_controls.is_running ?  "Running: Incoming Das Headers" : "Celestia Node not running yet") {
+                        List(Array(run_controls.das_record.keys), id: \.self) {header in
+                            VStack {
+                                NavigationLink(header, value: header)
+                                Divider()
+                            }
+
+                        }
+                        .navigationDestination(for: String.self) { item in
+                            let item = run_controls.das_record[item]!
+                            VStack {
+                                Text("evidence hash \(item.evidence)").font(.system(size: 11))
+                                Divider()
+                                Text("time \(item.time)").font(.system(size: 11))
+                                Divider()
+                                Text("last commit \(item.last_commit)").font(.system(size: 11))
+                            }
+                        }
                     }
                 }
             }
@@ -175,6 +226,7 @@ public enum BridgeCommand : String, Codable {
     case CMD_STOP_NODE = "stop_celestia_node"
     case RUN_RECEIVE_HEADER = "celestia_new_header"
     case RUN_NEW_SAMPLE     = "das_new_sample"
+    case RUN_SUBBED_TOPICS  = "subbed_libp2p_topics"
 }
 
 public struct BridgeMessage<P: Codable> : Codable {
@@ -215,6 +267,8 @@ public struct AnyDecodable : Codable {
             self.init(string)
         } else if let strs = try? container.decode([String].self) {
             self.init(strs)
+        } else if let kv = try? container.decode([String: Int].self) {
+            self.init(kv)
         } else if let ints = try? container.decode([Int].self) {
             self.init(ints)
         } else if let int = try? container.decode(Int.self) {

@@ -4,7 +4,7 @@ clean:
 	rm -rf *.a *.xcframework ios-framework-out
 
 ios:
-	rm -rf Celestia.xcframework
+	rm -rf Celestia.xcframework ios-framework-out
 	mkdir -p ios-framework-out
 	mkdir -p ios-framework-out/headers
 	mkdir -p ios-framework-out/sim
