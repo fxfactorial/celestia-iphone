@@ -196,23 +196,22 @@ struct CelestiaLightApp: App {
                         }
                     }
                     Section( run_controls.is_running ?  "Running: Incoming Das Headers" : "Celestia Node not running yet") {
-                        List(Array(run_controls.das_record.keys), id: \.self) {header in
-                            VStack {
-                                NavigationLink(header, value: header)
-                                Divider()
+                        ForEach(Array(run_controls.das_record.keys), id: \.self) {header in
+                            NavigationLink {
+                                let item = run_controls.das_record[header]!
+                                VStack {
+                                    Text("evidence hash \(item.evidence)").font(.system(size: 11))
+                                    Divider()
+                                    Text("time \(item.time)").font(.system(size: 11))
+                                    Divider()
+                                    Text("last commit \(item.last_commit)").font(.system(size: 11))
+                                }
+                            } label: {
+                                Text("Block \(header)")
                             }
+                        }
 
-                        }
-                        .navigationDestination(for: String.self) { item in
-                            let item = run_controls.das_record[item]!
-                            VStack {
-                                Text("evidence hash \(item.evidence)").font(.system(size: 11))
-                                Divider()
-                                Text("time \(item.time)").font(.system(size: 11))
-                                Divider()
-                                Text("last commit \(item.last_commit)").font(.system(size: 11))
-                            }
-                        }
+
                     }
                 }
             }
