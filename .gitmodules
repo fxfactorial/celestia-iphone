@@ -5,5 +5,5 @@
 	path = gosigar
 	url = git@github.com:fxfactorial/gosigar.git
 [submodule "keyring"]
-	path = gosigar
+	path = keyring
 	url = git@github.com:fxfactorial/keyring.git
