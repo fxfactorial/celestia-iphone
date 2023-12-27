@@ -1,0 +1,5 @@
+module Celestia {
+  header "libcelestia-bridge.h"       
+  link  "celestia-bridge"
+  export *
+}

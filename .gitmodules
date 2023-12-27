@@ -1,0 +1,9 @@
+[submodule "celestia-node"]
+	path = celestia-node
+	url = git@github.com:fxfactorial/celestia-node.git
+[submodule "gosigar"]
+	path = gosigar
+	url = git@github.com:fxfactorial/gosigar.git
+[submodule "keyring"]
+	path = gosigar
+	url = git@github.com:fxfactorial/keyring.git
